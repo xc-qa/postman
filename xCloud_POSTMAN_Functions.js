@@ -36,6 +36,16 @@ postman.setGlobalVariable("module:resolveEnvVars", resolveEnvVars);
 var authScript = "function resolveEnvVars(postmanStr){reg=new RegExp(\"{{(.+?)}}\",\"g\");var result;while((result=reg.exec(postmanStr))!==null){var match=result[0];var envVar=result[1];var evaluatedVar=postman.getEnvironmentVariable(envVar);postmanStr=postmanStr.replace(match,evaluatedVar);reg.lastIndex=0;} if(postmanStr===undefined||postmanStr===null){postmanStr=\"\";} return postmanStr;} function setAuthHeaders(){postman.clearEnvironmentVariable(\"authHeader\");var requestTime=new Date().toISOString();postman.setEnvironmentVariable(\"requestTime\",requestTime);postman.setEnvironmentVariable(\"dateHeader\",requestTime.split('.')[0]+\"Z\");var authHeader=\"xCloud \";authHeader+=btoa(postman.getEnvironmentVariable(\"authSrvcId\"))+\":\";var requestUrl=resolveEnvVars(request.url);var baseRequestPath=postman.getEnvironmentVariable(\"baseRequestPath\");var requestPath=requestUrl.substr(requestUrl.indexOf(baseRequestPath));var contentTypeHeader=\"application/json\";var xcHeaders=\"\";if(request.data.length>0){var contentMDHeader=CryptoJS.MD5(resolveEnvVars(request.data)).toString(CryptoJS.enc.Base64);}else{var contentMDHeader=\"\";} var Message=[request.method,contentTypeHeader,postman.getEnvironmentVariable(\"dateHeader\"),requestPath,xcHeaders,contentMDHeader,postman.getEnvironmentVariable(\"authSrvcId\")].join('\\n');var Key=postman.getEnvironmentVariable(\"hmacKey\");authHeader+=CryptoJS.HmacSHA256(Message,CryptoJS.enc.Base64.parse(Key)).toString(CryptoJS.enc.Base64);postman.setEnvironmentVariable(\"authHeader\",authHeader);postman.setEnvironmentVariable(\"contentMDHeader\",contentMDHeader);}";
 postman.setGlobalVariable("module:authScript", authScript);
 
+/**
+ * This function evaluates the request URL (after passing it through resolveEnvVars) and then 
+ * grabs all key-value parameters after '?' which are delimited by '&'.
+ * @param {string} url request.url from POSTMAN
+ * @returns {object} JS Object containing query parameters found in the URL
+ */
+var getURLParameters = "function resolveEnvVars(postmanStr){reg=new RegExp('{{(.+?)}}','g');var result;while((result=reg.exec(postmanStr))!==null){var match=result[0];var envVar=result[1];var evaluatedVar=postman.getEnvironmentVariable(envVar);postmanStr=postmanStr.replace(match,evaluatedVar);reg.lastIndex=0;} if(postmanStr===undefined||postmanStr===null){postmanStr='';} return postmanStr;} function getURLParameters(url){var searchObject={};var queries=url.substr(url.indexOf('?')).split('&');for(i=0;i<queries.length;i++){split=queries[i].split('=');searchObject[split[0]]=split[1];} return searchObject;}";
+postman.setGlobalVariable("module:getURLParameters", getURLParameters);
+
+
 ////////////////////////////////////////////////////////////
 // JSON SCHEMAS TO USE WITH XCLOUD API TESTING
 ////////////////////////////////////////////////////////////
